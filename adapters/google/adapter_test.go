@@ -1,6 +1,7 @@
 package google
 
 import (
+	"errors"
 	"github.com/metglobal-compass/pusu"
 	"testing"
 )
@@ -69,6 +70,66 @@ func TestAdapter_CreateSubscription(t *testing.T) {
 	}
 }
 
+func TestAdapter_CreateSubscriptionOnTopicFailure(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.topicAdder = new(fakeCreatorFailure)
+	adapter.subscriberAdder = new(fakeCreatorSuccessor)
+	adapter.httpHandlerAdder = new(fakeCreatorSuccessor)
+
+	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+		return nil
+	})
+
+	// Subscription creation must return error when topic adder return error
+	err := adapter.CreateSubscription(subscription)
+	topicAdder := adapter.topicAdder.(*fakeCreatorFailure)
+	if err == nil || topicAdder.called != 1 {
+		t.Error("subscription creation must return error when topic adder returns error")
+	}
+
+	// Subscriber adder must not be called after failure on topic creation
+	subscriberAdder := adapter.subscriberAdder.(*fakeCreatorSuccessor)
+	if subscriberAdder.called > 0 {
+		t.Error("Subscriber adder must not be called after failure on topic creation")
+	}
+}
+
+func TestAdapter_CreateSubscriptionOnSubscriberFailure(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.topicAdder = new(fakeCreatorSuccessor)
+	adapter.subscriberAdder = new(fakeCreatorFailure)
+	adapter.httpHandlerAdder = new(fakeCreatorSuccessor)
+
+	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+		return nil
+	})
+
+	// Subscription creation must return error when subscriber adder return error
+	err := adapter.CreateSubscription(subscription)
+	subscriberAdder := adapter.subscriberAdder.(*fakeCreatorFailure)
+	if err == nil || subscriberAdder.called != 1 {
+		t.Error("subscription creation must return error when subscriber adder returns error")
+	}
+}
+
+func TestAdapter_CreateSubscriptionOnHttpHandlerFailure(t *testing.T) {
+	adapter := new(Adapter)
+	adapter.topicAdder = new(fakeCreatorSuccessor)
+	adapter.subscriberAdder = new(fakeCreatorSuccessor)
+	adapter.httpHandlerAdder = new(fakeCreatorFailure)
+
+	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+		return nil
+	})
+
+	// Subscription creation must return error when subscriber adder return error
+	err := adapter.CreateSubscription(subscription)
+	httpHandlerAdder := adapter.httpHandlerAdder.(*fakeCreatorFailure)
+	if err == nil || httpHandlerAdder.called != 1 {
+		t.Error("subscription creation must return error when http handler adder returns error")
+	}
+}
+
 type fakeCreatorSuccessor struct {
 	called int
 }
@@ -76,4 +137,13 @@ type fakeCreatorSuccessor struct {
 func (f *fakeCreatorSuccessor) CreateSubscription(subscription *pusu.Subscription) error {
 	f.called = f.called + 1
 	return nil
+}
+
+type fakeCreatorFailure struct {
+	called int
+}
+
+func (f *fakeCreatorFailure) CreateSubscription(subscription *pusu.Subscription) error {
+	f.called = f.called + 1
+	return errors.New("create subscription error")
 }
