@@ -130,6 +130,28 @@ func TestAdapter_CreateSubscriptionOnHttpHandlerFailure(t *testing.T) {
 	}
 }
 
+func TestAdapter_Run(t *testing.T) {
+	// Adapter must return nil error when runner successful
+	adapter := new(Adapter)
+	adapter.runner = new(fakeRunnerSuccessor)
+
+	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+		return nil
+	})
+
+	err := adapter.Run(subscription)
+	if err != nil {
+		t.Errorf("Error while running subscription with following message: \n %s", err.Error())
+	}
+
+	// Adapter must return error when runner unsuccessful
+	adapter.runner = new(fakeRunnerFailure)
+	err = adapter.Run(subscription)
+	if err == nil {
+		t.Error("Adapter must return error when runner unsuccessful")
+	}
+}
+
 type fakeCreatorSuccessor struct {
 	called int
 }
@@ -146,4 +168,22 @@ type fakeCreatorFailure struct {
 func (f *fakeCreatorFailure) CreateSubscription(subscription *pusu.Subscription) error {
 	f.called = f.called + 1
 	return errors.New("create subscription error")
+}
+
+type fakeRunnerSuccessor struct {
+	called int
+}
+
+func (f *fakeRunnerSuccessor) Run(subscription *pusu.Subscription) error {
+	f.called = f.called + 1
+	return nil
+}
+
+type fakeRunnerFailure struct {
+	called int
+}
+
+func (f *fakeRunnerFailure) Run(subscription *pusu.Subscription) error {
+	f.called = f.called + 1
+	return errors.New("running subscription error")
 }

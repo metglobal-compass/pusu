@@ -20,6 +20,9 @@ type Adapter struct {
 
 	// Adds relevant routing information to http package and handles pre-processing http message to pusu.Message
 	httpHandlerAdder pusu.Creator
+
+	// Runs subscription as HTTP App Engine service
+	runner pusu.Runner
 }
 
 // Implementation of pusu.Creator interface as part of pusu.Adapter interface
@@ -51,4 +54,10 @@ func (g *Adapter) CreateSubscription(subscription *pusu.Subscription) error {
 	}
 
 	return nil
+}
+
+// Implementation of pusu.Runner interface as part of pusu.Adapter interface
+func (g *Adapter) Run(subscription *pusu.Subscription) error {
+	err := g.runner.Run(subscription)
+	return err
 }
