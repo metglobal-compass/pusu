@@ -152,6 +152,19 @@ func TestAdapter_Run(t *testing.T) {
 	}
 }
 
+func TestAdapter_CreateAdapter(t *testing.T) {
+	// Call real method and check each interfaces have proper type
+	adapter := CreateAdapter()
+
+	_, httpHandlerProper := adapter.httpHandlerAdder.(*httpHandlerAdder)
+
+	if adapter.httpHandlerAdder != nil && !httpHandlerProper {
+		t.Errorf("Create Adapter Error: \nFollowing interfaces does not have proper type:"+
+			"httpHandlerAdder: \n%t",
+			httpHandlerProper)
+	}
+}
+
 type fakeCreatorSuccessor struct {
 	called int
 }

@@ -61,3 +61,11 @@ func (g *Adapter) Run(subscription *pusu.Subscription) error {
 	err := g.runner.Run(subscription)
 	return err
 }
+
+// Creates Google Adapter
+func CreateAdapter() *Adapter {
+	googleAdapter := new(Adapter)
+	googleAdapter.httpHandlerAdder = new(httpHandlerAdder)
+
+	return googleAdapter
+}
