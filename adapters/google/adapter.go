@@ -12,6 +12,14 @@ import (
 )
 
 type Adapter struct {
+	// Adds topic information to Google Cloud
+	topicAdder pusu.Creator
+
+	// Adds subscriber information to Google Cloud
+	subscriberAdder pusu.Creator
+
+	// Adds relevant routing information to http package and handles pre-processing http message to pusu.Message
+	httpHandlerAdder pusu.Creator
 }
 
 // Implementation of pusu.Creator interface as part of pusu.Adapter interface
@@ -25,6 +33,21 @@ func (g *Adapter) CreateSubscription(subscription *pusu.Subscription) error {
 	}
 	if subscription.Subscriber() == nil {
 		return errors.New("Subscription handler must not be empty. ")
+	}
+
+	err := g.httpHandlerAdder.CreateSubscription(subscription)
+	if err != nil {
+		return err
+	}
+
+	err = g.topicAdder.CreateSubscription(subscription)
+	if err != nil {
+		return err
+	}
+
+	err = g.subscriberAdder.CreateSubscription(subscription)
+	if err != nil {
+		return err
 	}
 
 	return nil
