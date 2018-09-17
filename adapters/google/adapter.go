@@ -35,17 +35,17 @@ func (g *Adapter) CreateSubscription(subscription *pusu.Subscription) error {
 		return errors.New("Subscription handler must not be empty. ")
 	}
 
-	err := g.httpHandlerAdder.CreateSubscription(subscription)
-	if err != nil {
-		return err
-	}
-
-	err = g.topicAdder.CreateSubscription(subscription)
+	err := g.topicAdder.CreateSubscription(subscription)
 	if err != nil {
 		return err
 	}
 
 	err = g.subscriberAdder.CreateSubscription(subscription)
+	if err != nil {
+		return err
+	}
+
+	err = g.httpHandlerAdder.CreateSubscription(subscription)
 	if err != nil {
 		return err
 	}
