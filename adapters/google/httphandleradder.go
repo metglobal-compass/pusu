@@ -43,7 +43,7 @@ func (h *httpHandlerAdder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create message
-	pusuMessage := pusu.NewMessage(s)
+	pusuMessage := pusu.NewMessage(string(s))
 
 	// Execute real method of subscription
 	err = h.subscription.Subscriber()(pusuMessage)
