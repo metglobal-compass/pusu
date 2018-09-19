@@ -3,6 +3,8 @@ package google
 import (
 	"errors"
 	"github.com/metglobal-compass/pusu"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/mock"
 	"testing"
 )
 
@@ -36,120 +38,97 @@ func TestAdapter_CreateSubscriptionValidations(t *testing.T) {
 }
 
 func TestAdapter_CreateSubscription(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.topicAdder = new(fakeCreatorSuccessor)
-	adapter.subscriberAdder = new(fakeCreatorSuccessor)
-	adapter.httpHandlerAdder = new(fakeCreatorSuccessor)
+	// Create mocked object
+	successCreator := new(fakeCreator)
+	successCreator.On("CreateSubscription", mock.Anything).Return(nil)
 
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+	// Create real instance and call real method
+	adapter := new(Adapter)
+	adapter.cloudAdder = successCreator
+	adapter.httpHandlerAdder = successCreator
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
 		return nil
-	})
+	}))
 
 	// There must be no error
-	err := adapter.CreateSubscription(subscription)
-	if err != nil {
-		t.Errorf("Error while creating subscription with following message: \n %s", err.Error())
-	}
+	assert.Nil(t, err)
 
-	// Topic adder must be called once
-	topicAdder := adapter.topicAdder.(*fakeCreatorSuccessor)
-	if topicAdder.called != 1 {
-		t.Error("Error while creating subscription. Topic adder must be called exactly once")
-	}
-
-	// Subscriber adder must be called once
-	subscriberAdder := adapter.subscriberAdder.(*fakeCreatorSuccessor)
-	if subscriberAdder.called != 1 {
-		t.Error("Error while creating subscription. Subscriber adder must be called exactly once")
-	}
-
-	// Http handler must be called once
-	httpHandlerAdder := adapter.httpHandlerAdder.(*fakeCreatorSuccessor)
-	if httpHandlerAdder.called != 1 {
-		t.Error("Error while creating subscription. Http handler adder must be called exactly once")
-	}
+	// We used same interface so our successCreator must ve called twice for both cloud adder and http handler adder
+	successCreator.AssertNumberOfCalls(t, "CreateSubscription", 2)
 }
 
-func TestAdapter_CreateSubscriptionOnTopicFailure(t *testing.T) {
+func TestAdapter_CreateSubscriptionOnCloudFailure(t *testing.T) {
+	// Create successor mocked object
+	successCreator := new(fakeCreator)
+	successCreator.On("CreateSubscription", mock.Anything).Return(nil)
+
+	// Create failure mocked object
+	failCreator := new(fakeCreator)
+	failCreator.On("CreateSubscription", mock.Anything).Return(errors.New("error... "))
+
+	// Create real instance and call real method
 	adapter := new(Adapter)
-	adapter.topicAdder = new(fakeCreatorFailure)
-	adapter.subscriberAdder = new(fakeCreatorSuccessor)
-	adapter.httpHandlerAdder = new(fakeCreatorSuccessor)
+	adapter.cloudAdder = successCreator
+	adapter.httpHandlerAdder = failCreator
 
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+	// Subscription creation must return error when cloud adder return error
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
 		return nil
-	})
-
-	// Subscription creation must return error when topic adder return error
-	err := adapter.CreateSubscription(subscription)
-	topicAdder := adapter.topicAdder.(*fakeCreatorFailure)
-	if err == nil || topicAdder.called != 1 {
-		t.Error("subscription creation must return error when topic adder returns error")
-	}
-
-	// Subscriber adder must not be called after failure on topic creation
-	subscriberAdder := adapter.subscriberAdder.(*fakeCreatorSuccessor)
-	if subscriberAdder.called > 0 {
-		t.Error("Subscriber adder must not be called after failure on topic creation")
-	}
-}
-
-func TestAdapter_CreateSubscriptionOnSubscriberFailure(t *testing.T) {
-	adapter := new(Adapter)
-	adapter.topicAdder = new(fakeCreatorSuccessor)
-	adapter.subscriberAdder = new(fakeCreatorFailure)
-	adapter.httpHandlerAdder = new(fakeCreatorSuccessor)
-
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
-
-	// Subscription creation must return error when subscriber adder return error
-	err := adapter.CreateSubscription(subscription)
-	subscriberAdder := adapter.subscriberAdder.(*fakeCreatorFailure)
-	if err == nil || subscriberAdder.called != 1 {
-		t.Error("subscription creation must return error when subscriber adder returns error")
-	}
+	}))
+	assert.Error(t, err)
 }
 
 func TestAdapter_CreateSubscriptionOnHttpHandlerFailure(t *testing.T) {
+	// Create successor mocked object
+	successCreator := new(fakeCreator)
+	successCreator.On("CreateSubscription", mock.Anything).Return(nil)
+
+	// Create failure mocked object
+	failCreator := new(fakeCreator)
+	failCreator.On("CreateSubscription", mock.Anything).Return(errors.New("error... "))
+
+	// Create real instance and call real method
 	adapter := new(Adapter)
-	adapter.topicAdder = new(fakeCreatorSuccessor)
-	adapter.subscriberAdder = new(fakeCreatorSuccessor)
-	adapter.httpHandlerAdder = new(fakeCreatorFailure)
+	adapter.cloudAdder = failCreator
+	adapter.httpHandlerAdder = successCreator
 
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+	// Subscription creation must return error when cloud adder return error
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
 		return nil
-	})
-
-	// Subscription creation must return error when subscriber adder return error
-	err := adapter.CreateSubscription(subscription)
-	httpHandlerAdder := adapter.httpHandlerAdder.(*fakeCreatorFailure)
-	if err == nil || httpHandlerAdder.called != 1 {
-		t.Error("subscription creation must return error when http handler adder returns error")
-	}
+	}))
+	assert.Error(t, err)
 }
 
 func TestAdapter_Run(t *testing.T) {
-	// Adapter must return nil error when runner successful
+	// Create successor mocked object
+	successRunner := new(fakeRunner)
+	successRunner.On("Run", mock.Anything).Return(nil)
+
+	// Create real object and call real method
 	adapter := new(Adapter)
-	adapter.runner = new(fakeRunnerSuccessor)
-
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+	adapter.runner = successRunner
+	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
 		return nil
-	})
+	}))
 
-	err := adapter.Run(subscription)
-	if err != nil {
-		t.Errorf("Error while running subscription with following message: \n %s", err.Error())
-	}
+	// Error must be nil
+	assert.Nil(t, err)
+}
 
-	// Adapter must return error when runner unsuccessful
-	adapter.runner = new(fakeRunnerFailure)
-	err = adapter.Run(subscription)
-	if err == nil {
-		t.Error("Adapter must return error when runner unsuccessful")
-	}
+func TestAdapter_RunError(t *testing.T) {
+	// Create successor mocked object
+	failRunner := new(fakeRunner)
+	failRunner.On("Run", mock.Anything).Return(errors.New("error"))
+
+	// Create real object and call real method
+	adapter := new(Adapter)
+	adapter.runner = failRunner
+	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
+		return nil
+	}))
+
+	// Error must not be nil
+	assert.Error(t, err)
 }
 
 func TestAdapter_CreateAdapter(t *testing.T) {
@@ -165,38 +144,20 @@ func TestAdapter_CreateAdapter(t *testing.T) {
 	}
 }
 
-type fakeCreatorSuccessor struct {
-	called int
+type fakeCreator struct {
+	mock.Mock
 }
 
-func (f *fakeCreatorSuccessor) CreateSubscription(subscription *pusu.Subscription) error {
-	f.called = f.called + 1
-	return nil
+func (f *fakeCreator) CreateSubscription(subscription *pusu.Subscription) error {
+	args := f.Called(subscription)
+	return args.Error(0)
 }
 
-type fakeCreatorFailure struct {
-	called int
+type fakeRunner struct {
+	mock.Mock
 }
 
-func (f *fakeCreatorFailure) CreateSubscription(subscription *pusu.Subscription) error {
-	f.called = f.called + 1
-	return errors.New("create subscription error")
-}
-
-type fakeRunnerSuccessor struct {
-	called int
-}
-
-func (f *fakeRunnerSuccessor) Run(subscription *pusu.Subscription) error {
-	f.called = f.called + 1
-	return nil
-}
-
-type fakeRunnerFailure struct {
-	called int
-}
-
-func (f *fakeRunnerFailure) Run(subscription *pusu.Subscription) error {
-	f.called = f.called + 1
-	return errors.New("running subscription error")
+func (f *fakeRunner) Run(subscription *pusu.Subscription) error {
+	args := f.Called(subscription)
+	return args.Error(0)
 }
