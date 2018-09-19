@@ -14,6 +14,6 @@ func NewMessage(message interface{}) *Message {
 }
 
 // Get payload message
-func (m *Message) GetMessage() interface{} {
+func (m *Message) Message() interface{} {
 	return m.message
 }
