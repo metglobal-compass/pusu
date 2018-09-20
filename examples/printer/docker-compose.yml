@@ -1,0 +1,20 @@
+version: '3.2'
+services:
+  printing:
+    image: golang:1.10.4-alpine
+    volumes:
+    - .:/go/src/app
+    working_dir: /go/src/app
+    command: go run main.go
+    environment:
+    - PUBSUB_EMULATOR_HOST=emulator:8085
+    - PUB_SUB_PROJECT_ID=my-project-id
+    - BASE_HOST=http://printing:8080
+    depends_on:
+    - emulator
+    ports:
+    - "8081:8080"
+  emulator:
+    image: adilsoncarvalho/gcloud-pubsub-emulator
+    ports:
+    - "8085:8085"
