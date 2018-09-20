@@ -132,16 +132,40 @@ func TestAdapter_RunError(t *testing.T) {
 }
 
 func TestAdapter_CreateAdapter(t *testing.T) {
-	// Call real method and check each interfaces have proper type
-	adapter := CreateAdapter()
+	// Call real method and check each interfaces have proper types
+	adapter, err := CreateAdapter("my-project", "http://localhost")
+
+	assert.Nil(t, err)
+	assert.NotNil(t, adapter.httpHandlerAdder)
+	assert.NotNil(t, adapter.cloudAdder)
+	assert.NotNil(t, adapter.runner)
 
 	_, httpHandlerProper := adapter.httpHandlerAdder.(*httpHandlerAdder)
+	assert.True(t, httpHandlerProper, "Http handler is not proper")
 
-	if adapter.httpHandlerAdder != nil && !httpHandlerProper {
-		t.Errorf("Create Adapter Error: \nFollowing interfaces does not have proper type:"+
-			"httpHandlerAdder: \n%t",
-			httpHandlerProper)
-	}
+	cloudAdder, cloudAdderProper := adapter.cloudAdder.(*cloudAdder)
+	assert.True(t, cloudAdderProper, "Cloud adder is not proper")
+
+	// Check cloud adder created with proper host configuration
+	assert.Equal(t, "http://localhost", cloudAdder.host)
+
+	_, pubSubClientProper := cloudAdder.client.(*pubSubClientWrapper)
+	assert.True(t, pubSubClientProper, "Pubsub client is not proper")
+
+	_, appEngineRunnerProper := adapter.runner.(*appEngineRunner)
+	assert.True(t, appEngineRunnerProper, "Runner  is not proper")
+}
+
+func TestAdapter_CreateAdapterErrorWithEmptyProject(t *testing.T) {
+	// Call real method and check each interfaces have proper type
+	_, err := CreateAdapter("", "http://localhost")
+	assert.Error(t, err)
+}
+
+func TestAdapter_CreateAdapterErrorWithEmptyHost(t *testing.T) {
+	// Call real method and check each interfaces have proper type
+	_, err := CreateAdapter("my-project", "")
+	assert.Error(t, err)
 }
 
 type fakeCreator struct {

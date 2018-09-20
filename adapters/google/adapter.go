@@ -7,6 +7,8 @@
 package google
 
 import (
+	"cloud.google.com/go/pubsub"
+	"context"
 	"errors"
 	"github.com/metglobal-compass/pusu"
 )
@@ -55,9 +57,30 @@ func (g *Adapter) Run(subscription *pusu.Subscription) error {
 }
 
 // Creates Google Adapter
-func CreateAdapter() *Adapter {
+// projectId: Google Cloud Project Id
+// host: Base host uri of app engine based subscriber http handlers. (Ex: https://servicename.appspot.com/)
+func CreateAdapter(projectId string, host string) (*Adapter, error) {
+	// Validate parameters
+	if projectId == "" {
+		return nil, errors.New("projectId must not be empty")
+	}
+
+	if host == "" {
+		return nil, errors.New("host for subscriber http handlers must not be empty")
+	}
+
 	googleAdapter := new(Adapter)
 	googleAdapter.httpHandlerAdder = new(httpHandlerAdder)
 
-	return googleAdapter
+	// Add pub/sub client
+	client, err := pubsub.NewClient(context.Background(), projectId)
+	if err != nil {
+		return nil, err
+	}
+	googleAdapter.cloudAdder = &cloudAdder{client: &pubSubClientWrapper{client: client}, host: host}
+
+	// Add appengine runner
+	googleAdapter.runner = new(appEngineRunner)
+
+	return googleAdapter, nil
 }
