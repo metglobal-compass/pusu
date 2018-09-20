@@ -2,9 +2,7 @@ package google
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
-	"github.com/metglobal-compass/pusu"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -14,9 +12,7 @@ import (
 func TestHttpHandlerAdder_CreateSubscription(t *testing.T) {
 	// Create subscription via httpdhandleradder
 	handler := new(httpHandlerAdder)
-	handler.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	handler.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Create test server
 	server := httptest.NewServer(handler)
@@ -39,9 +35,7 @@ func TestHttpHandlerAdder_CreateSubscription(t *testing.T) {
 func TestHttpHandlerAdder_UrlPath(t *testing.T) {
 	// Create subscription via httpdhandleradder
 	handler := new(httpHandlerAdder)
-	subscription := pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	subscription := new(fakeSubscription).WillHaveProperFields()
 
 	// Check generated path
 	expectedPath := "/_handlers/topics/test/subscribers/testing"
@@ -62,9 +56,7 @@ func TestHttpHandlerAdder_ServeHTTP(t *testing.T) {
 
 	// Create http handler and call real method
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	handler.subscription = new(fakeSubscription).WillHaveProperFields()
 	handler.ServeHTTP(w, req)
 
 	// Check status code
@@ -84,9 +76,7 @@ func TestHttpHandlerAdder_ServeHTTPErrorJson(t *testing.T) {
 
 	// Create http handler and call real method
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	handler.subscription = new(fakeSubscription).WillHaveProperFields()
 	handler.ServeHTTP(w, req)
 
 	// Check status code
@@ -110,9 +100,7 @@ func TestHttpHandlerAdder_ServeHTTPErrorBase64(t *testing.T) {
 
 	// Create http handler and call real method
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	handler.subscription = new(fakeSubscription).WillHaveProperFields()
 	handler.ServeHTTP(w, req)
 
 	// Check status code
@@ -136,9 +124,7 @@ func TestHttpHandlerAdder_ServeHTTPSubscriberError(t *testing.T) {
 
 	// Create http handler and call real method. Subscriber must return error
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return errors.New("Message error. ")
-	})
+	handler.subscription = new(fakeSubscription).WillReturnError()
 	handler.ServeHTTP(w, req)
 
 	// Check status code
@@ -162,9 +148,7 @@ func TestHttpHandlerAdder_ServeHTTPSubscriberPathError(t *testing.T) {
 
 	// Create http handler and call real method
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	handler.subscription = new(fakeSubscription).WillHaveProperFields()
 	handler.ServeHTTP(w, req)
 
 	// Check status code
@@ -184,9 +168,7 @@ func TestHttpHandlerAdder_ServeHTTPSubscriberMethodTypeError(t *testing.T) {
 
 	// Create http handler and call real method
 	handler := new(httpHandlerAdder)
-	handler.subscription = pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	handler.subscription = new(fakeSubscription).WillHaveProperFields()
 	handler.ServeHTTP(w, req)
 
 	// Check status code

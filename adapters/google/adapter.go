@@ -25,16 +25,13 @@ type Adapter struct {
 }
 
 // Implementation of pusu.Creator interface as part of pusu.Adapter interface
-func (g *Adapter) CreateSubscription(subscription *pusu.Subscription) error {
+func (g *Adapter) CreateSubscription(subscription pusu.Subscription) error {
 	// Validate subscription
 	if subscription.Name() == "" {
 		return errors.New("Subscription name must not be empty. ")
 	}
 	if subscription.Topic() == "" {
 		return errors.New("Subscription topic must not be empty. ")
-	}
-	if subscription.Subscriber() == nil {
-		return errors.New("Subscription handler must not be empty. ")
 	}
 
 	err := g.cloudAdder.CreateSubscription(subscription)
@@ -51,7 +48,7 @@ func (g *Adapter) CreateSubscription(subscription *pusu.Subscription) error {
 }
 
 // Implementation of pusu.Runner interface as part of pusu.Adapter interface
-func (g *Adapter) Run(subscription *pusu.Subscription) error {
+func (g *Adapter) Run(subscription pusu.Subscription) error {
 	err := g.runner.Run(subscription)
 	return err
 }

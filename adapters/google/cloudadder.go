@@ -18,7 +18,7 @@ type cloudAdder struct {
 }
 
 // Implementation of internal Creator interface for Google Adapter
-func (t *cloudAdder) CreateSubscription(subscription *pusu.Subscription) error {
+func (t *cloudAdder) CreateSubscription(subscription pusu.Subscription) error {
 	// Use single context
 	ctx := context.Background()
 

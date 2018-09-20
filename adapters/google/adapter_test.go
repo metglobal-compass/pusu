@@ -8,33 +8,21 @@ import (
 	"testing"
 )
 
-func TestAdapter_CreateSubscriptionValidations(t *testing.T) {
+func TestAdapter_CreateSubscriptionErrorOnEmptyTopic(t *testing.T) {
+	// Create adapter
 	adapter := new(Adapter)
 
-	// Must return error when topic name is empty
-	subscriptionWithEmptyTopic := pusu.NewSubscription("", "testing", func(m *pusu.Message) error {
-		return nil
-	})
-	err := adapter.CreateSubscription(subscriptionWithEmptyTopic)
-	if err == nil {
-		t.Error("Error while validation of subscription. Topic must be validated.")
-	}
+	// Create subscription which has empty topic name. Must return error when topic name is empty
+	err := adapter.CreateSubscription(new(fakeSubscription).WithName("testing").WithTopic(""))
+	assert.Error(t, err)
+}
+func TestAdapter_CreateSubscriptionErrorOnEmptyName(t *testing.T) {
+	// Create adapter
+	adapter := new(Adapter)
 
-	// Must return error when subscription name is empty
-	subscriptionWithEmptySubscriberName := pusu.NewSubscription("test", "", func(m *pusu.Message) error {
-		return nil
-	})
-	err = adapter.CreateSubscription(subscriptionWithEmptySubscriberName)
-	if err == nil {
-		t.Error("Error while validation of subscription. Subscription name must be validated.")
-	}
-
-	// Must return error when subscription handler is empty
-	subscriptionWithEmptySubscriber := pusu.NewSubscription("test", "testing", nil)
-	err = adapter.CreateSubscription(subscriptionWithEmptySubscriber)
-	if err == nil {
-		t.Error("Error while validation of subscription. Subscription handler must be validated")
-	}
+	// Create subscription which has empty subscription name. Must return error when name is empty
+	err := adapter.CreateSubscription(new(fakeSubscription).WithName(""))
+	assert.Error(t, err)
 }
 
 func TestAdapter_CreateSubscription(t *testing.T) {
@@ -46,9 +34,7 @@ func TestAdapter_CreateSubscription(t *testing.T) {
 	adapter := new(Adapter)
 	adapter.cloudAdder = successCreator
 	adapter.httpHandlerAdder = successCreator
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// There must be no error
 	assert.Nil(t, err)
@@ -72,9 +58,7 @@ func TestAdapter_CreateSubscriptionOnCloudFailure(t *testing.T) {
 	adapter.httpHandlerAdder = failCreator
 
 	// Subscription creation must return error when cloud adder return error
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 	assert.Error(t, err)
 }
 
@@ -93,9 +77,7 @@ func TestAdapter_CreateSubscriptionOnHttpHandlerFailure(t *testing.T) {
 	adapter.httpHandlerAdder = successCreator
 
 	// Subscription creation must return error when cloud adder return error
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 	assert.Error(t, err)
 }
 
@@ -107,9 +89,7 @@ func TestAdapter_Run(t *testing.T) {
 	// Create real object and call real method
 	adapter := new(Adapter)
 	adapter.runner = successRunner
-	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.Run(new(fakeSubscription).WillHaveProperFields())
 
 	// Error must be nil
 	assert.Nil(t, err)
@@ -123,9 +103,7 @@ func TestAdapter_RunError(t *testing.T) {
 	// Create real object and call real method
 	adapter := new(Adapter)
 	adapter.runner = failRunner
-	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.Run(new(fakeSubscription).WillHaveProperFields())
 
 	// Error must not be nil
 	assert.Error(t, err)
@@ -168,20 +146,64 @@ func TestAdapter_CreateAdapterErrorWithEmptyHost(t *testing.T) {
 	assert.Error(t, err)
 }
 
+// A fake creator definition
 type fakeCreator struct {
 	mock.Mock
 }
 
-func (f *fakeCreator) CreateSubscription(subscription *pusu.Subscription) error {
+func (f *fakeCreator) CreateSubscription(subscription pusu.Subscription) error {
 	args := f.Called(subscription)
 	return args.Error(0)
 }
 
+// A fake runner definition
 type fakeRunner struct {
 	mock.Mock
 }
 
-func (f *fakeRunner) Run(subscription *pusu.Subscription) error {
+func (f *fakeRunner) Run(subscription pusu.Subscription) error {
 	args := f.Called(subscription)
 	return args.Error(0)
+}
+
+// A fake subscription definition
+type fakeSubscription struct {
+	mock.Mock
+}
+
+func (f *fakeSubscription) Handle(m *pusu.Message) error {
+	args := f.Called(m)
+	return args.Error(0)
+}
+func (f *fakeSubscription) Topic() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+func (f *fakeSubscription) Name() string {
+	args := f.Called()
+	return args.String(0)
+}
+
+func (f *fakeSubscription) WithTopic(topic string) *fakeSubscription {
+	f.On("Topic").Return(topic)
+	return f
+}
+
+func (f *fakeSubscription) WithName(name string) *fakeSubscription {
+	f.On("Name").Return(name)
+	return f
+}
+
+func (f *fakeSubscription) WithReturning(err error) *fakeSubscription {
+	f.On("Handle", mock.Anything).Return(err)
+	return f
+}
+
+func (f *fakeSubscription) WillHaveProperFields() pusu.Subscription {
+	return f.WithTopic("test").WithName("testing").WithReturning(nil)
+}
+
+func (f *fakeSubscription) WillReturnError() *fakeSubscription {
+	return f.WithTopic("test").WithName("testing").WithReturning(errors.New("error"))
 }
