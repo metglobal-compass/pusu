@@ -12,18 +12,14 @@ func TestAdapter_CreateSubscriptionValidations(t *testing.T) {
 	adapter := new(Adapter)
 
 	// Must return error when topic name is empty
-	subscriptionWithEmptyTopic := pusu.NewSubscription("", "testing", func(m *pusu.Message) error {
-		return nil
-	})
+	subscriptionWithEmptyTopic := pusu.NewSubscription("", "testing", new(dummySubscriber))
 	err := adapter.CreateSubscription(subscriptionWithEmptyTopic)
 	if err == nil {
 		t.Error("Error while validation of subscription. Topic must be validated.")
 	}
 
 	// Must return error when subscription name is empty
-	subscriptionWithEmptySubscriberName := pusu.NewSubscription("test", "", func(m *pusu.Message) error {
-		return nil
-	})
+	subscriptionWithEmptySubscriberName := pusu.NewSubscription("test", "", new(dummySubscriber))
 	err = adapter.CreateSubscription(subscriptionWithEmptySubscriberName)
 	if err == nil {
 		t.Error("Error while validation of subscription. Subscription name must be validated.")
@@ -46,9 +42,7 @@ func TestAdapter_CreateSubscription(t *testing.T) {
 	adapter := new(Adapter)
 	adapter.cloudAdder = successCreator
 	adapter.httpHandlerAdder = successCreator
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// There must be no error
 	assert.Nil(t, err)
@@ -72,9 +66,7 @@ func TestAdapter_CreateSubscriptionOnCloudFailure(t *testing.T) {
 	adapter.httpHandlerAdder = failCreator
 
 	// Subscription creation must return error when cloud adder return error
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 	assert.Error(t, err)
 }
 
@@ -93,9 +85,7 @@ func TestAdapter_CreateSubscriptionOnHttpHandlerFailure(t *testing.T) {
 	adapter.httpHandlerAdder = successCreator
 
 	// Subscription creation must return error when cloud adder return error
-	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 	assert.Error(t, err)
 }
 
@@ -107,9 +97,7 @@ func TestAdapter_Run(t *testing.T) {
 	// Create real object and call real method
 	adapter := new(Adapter)
 	adapter.runner = successRunner
-	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.Run(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Error must be nil
 	assert.Nil(t, err)
@@ -123,9 +111,7 @@ func TestAdapter_RunError(t *testing.T) {
 	// Create real object and call real method
 	adapter := new(Adapter)
 	adapter.runner = failRunner
-	err := adapter.Run(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := adapter.Run(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Error must not be nil
 	assert.Error(t, err)
@@ -184,4 +170,18 @@ type fakeRunner struct {
 func (f *fakeRunner) Run(subscription *pusu.Subscription) error {
 	args := f.Called(subscription)
 	return args.Error(0)
+}
+
+type dummySubscriber struct {
+}
+
+func (d *dummySubscriber) Handle(m *pusu.Message) error {
+	return nil
+}
+
+type failureSubscriber struct {
+}
+
+func (d *failureSubscriber) Handle(m *pusu.Message) error {
+	return errors.New("Message error. ")
 }

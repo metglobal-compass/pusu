@@ -46,7 +46,7 @@ func (h *httpHandlerAdder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pusuMessage := pusu.NewMessage(string(s))
 
 	// Execute real method of subscription
-	err = h.subscription.Subscriber()(pusuMessage)
+	err = h.subscription.Subscriber().Handle(pusuMessage)
 
 	// Return 500 status code in case of any error, otherwise do nothing
 	if err != nil {

@@ -28,9 +28,7 @@ func TestCloudAdder_CreateSubscription(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Everything is fine, so real method must return nil as error
 	assert.Nil(t, err, "cloudAdder.CreateSubscription must return nil when everything is fine.")
@@ -67,9 +65,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnTopicExists(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Got an error
 	assert.Error(t, err)
@@ -99,9 +95,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnCreateTopic(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Got an error
 	assert.Error(t, err)
@@ -133,9 +127,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnSubscriptionExists(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Got an error
 	assert.Error(t, err)
@@ -169,9 +161,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnCreateSubscription(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", func(m *pusu.Message) error {
-		return nil
-	}))
+	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
 
 	// Everything is fine, so real method must return nil as error
 	assert.Error(t, err)
