@@ -4,6 +4,10 @@ This example is a simulation of pub/sub workflow for Google Cloud in local envir
 
 ## Building
 
+Install dependencies
+
+```dep ensure```
+
 Use docker-compose for building the example
 
 
@@ -13,10 +17,11 @@ Use docker-compose for building the example
 
 Send following curl request to Google Cloud Pub/Sub Emulator
 
+
 ```
 curl -X POST \
   http://localhost:8085/v1/projects/my-project-id/topics/printer:publish \
-  -H 'content-type: application/json' \
+  -H 'content-ype: application/json' \
   -d '{"messages": [
     {
     "data":"YXNkYWY=",
