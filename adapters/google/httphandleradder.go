@@ -9,11 +9,11 @@ import (
 )
 
 type httpHandlerAdder struct {
-	subscription *pusu.Subscription
+	subscription pusu.Subscription
 }
 
 // Implementation of internal Creator interface for Google Adapter
-func (h *httpHandlerAdder) CreateSubscription(subscription *pusu.Subscription) error {
+func (h *httpHandlerAdder) CreateSubscription(subscription pusu.Subscription) error {
 	h.subscription = subscription
 	http.Handle(h.UrlPath(subscription), h)
 	return nil
@@ -46,7 +46,7 @@ func (h *httpHandlerAdder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	pusuMessage := pusu.NewMessage(string(s))
 
 	// Execute real method of subscription
-	err = h.subscription.Subscriber().Handle(pusuMessage)
+	err = h.subscription.Handle(pusuMessage)
 
 	// Return 500 status code in case of any error, otherwise do nothing
 	if err != nil {
@@ -57,6 +57,6 @@ func (h *httpHandlerAdder) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 // Get url path of subscriber
-func (h *httpHandlerAdder) UrlPath(subscription *pusu.Subscription) string {
+func (h *httpHandlerAdder) UrlPath(subscription pusu.Subscription) string {
 	return fmt.Sprintf("/_handlers/topics/%s/subscribers/%s", subscription.Topic(), subscription.Name())
 }

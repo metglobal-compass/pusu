@@ -1,33 +1,14 @@
 package pusu
 
-// Holds immutable data of subscription.
-type Subscription struct {
-	name       string
-	topic      string
-	subscriber Subscriber
-}
+type Subscription interface {
+	// Returns the name of topic
+	Topic() string
 
-// Returns name of subscription
-func (s *Subscription) Name() string {
-	return s.name
-}
+	// Returns the name of subscription
+	Name() string
 
-// Returns topic of subscription
-func (s *Subscription) Topic() string {
-	return s.topic
-}
-
-// Returns subscription's base logic
-func (s *Subscription) Subscriber() Subscriber {
-	return s.subscriber
-}
-
-// Creates new subscription
-func NewSubscription(topic string, name string, subscriber Subscriber) *Subscription {
-	s := new(Subscription)
-	s.topic = topic
-	s.name = name
-	s.subscriber = subscriber
-
-	return s
+	// Handles the pub/sub message
+	// Function gets generic pusu.Message type and returns nil as error after successful handling of message.
+	// If function return a non-nil error type, adapter try again for later attempt until gets a successful response.
+	Handle(m *Message) error
 }

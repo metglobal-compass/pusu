@@ -7,7 +7,7 @@ import (
 
 func TestNewSubscription(t *testing.T) {
 	// Create a sample subscription with a returning a failed message processing.
-	subscription := NewSubscription("test", "testing", new(failureSubscriber))
+	subscription := new(failureSubscription)
 
 	// Check topic is created as sent to function
 	if subscription.Topic() != "test" {
@@ -20,16 +20,24 @@ func TestNewSubscription(t *testing.T) {
 	}
 
 	// Check subscriber is created as sent to function. It must return error with pre-defined message.
-	err := subscription.Subscriber().Handle(new(Message))
+	err := subscription.Handle(new(Message))
 
 	if err.Error() != "test error" {
 		t.Errorf("Subscriber error:\nExpected error message:\n%s \nActual:\n%s", "test error", err.Error())
 	}
 }
 
-type failureSubscriber struct {
+type failureSubscription struct {
 }
 
-func (f *failureSubscriber) Handle(m *Message) error {
+func (f *failureSubscription) Topic() string {
+	return "test"
+}
+
+func (f *failureSubscription) Name() string {
+	return "testing"
+}
+
+func (f *failureSubscription) Handle(m *Message) error {
 	return errors.New("test error")
 }

@@ -5,7 +5,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/metglobal-compass/pusu"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 	"testing"
@@ -28,7 +27,7 @@ func TestCloudAdder_CreateSubscription(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
+	err := cloudAdder.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Everything is fine, so real method must return nil as error
 	assert.Nil(t, err, "cloudAdder.CreateSubscription must return nil when everything is fine.")
@@ -65,7 +64,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnTopicExists(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
+	err := cloudAdder.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Got an error
 	assert.Error(t, err)
@@ -95,7 +94,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnCreateTopic(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
+	err := cloudAdder.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Got an error
 	assert.Error(t, err)
@@ -127,7 +126,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnSubscriptionExists(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
+	err := cloudAdder.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Got an error
 	assert.Error(t, err)
@@ -161,7 +160,7 @@ func TestCloudAdder_CreateSubscriptionErrorOnCreateSubscription(t *testing.T) {
 	cloudAdder := new(cloudAdder)
 	cloudAdder.client = fakeClient
 	cloudAdder.host = "http://localhost"
-	err := cloudAdder.CreateSubscription(pusu.NewSubscription("test", "testing", new(dummySubscriber)))
+	err := cloudAdder.CreateSubscription(new(fakeSubscription).WillHaveProperFields())
 
 	// Everything is fine, so real method must return nil as error
 	assert.Error(t, err)

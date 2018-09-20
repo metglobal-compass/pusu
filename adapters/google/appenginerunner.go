@@ -9,7 +9,7 @@ import (
 type appEngineRunner struct {
 }
 
-func (a *appEngineRunner) Run(subscription *pusu.Subscription) error {
+func (a *appEngineRunner) Run(subscription pusu.Subscription) error {
 	appengine.Main()
 	return nil
 }
